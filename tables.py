@@ -9,18 +9,22 @@ class Rooms:
     def __init__(self, db) -> None:
         self.db = db
 
-    # Create the rooms table in the database
     def create_table(self):
         cursor = self.db.get_cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS rooms (
-                id INT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL
-            )
-        """)
-        self.db.commit()
-
-
+        try:
+            # Drop child tables first to avoid Foreign Key constraint errors, then the parent.
+            cursor.execute("DROP TABLE IF EXISTS students")
+            cursor.execute("DROP TABLE IF EXISTS rooms")
+            
+            cursor.execute("""
+                CREATE TABLE rooms (
+                    id INT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL
+                )
+            """)
+            self.db.commit()
+        finally:
+            cursor.close()
 
 class Students:
     def __init__(self, db) -> None:
@@ -28,20 +32,22 @@ class Students:
 
     def create_table(self):
         cursor = self.db.get_cursor()
-        cursor.execute("DROP TABLE IF EXISTS students")
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS students (
-                birthday DATE NOT NULL,
-                id INT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                room INTEGER,
-                sex char(1) NOT NULL,
-                FOREIGN KEY (room) REFERENCES rooms(id)
-            )
-        """)
-        self.db.commit()
-        
-        cursor.execute("CREATE INDEX idx_students_room_sex ON students(room, sex)")
-        cursor.execute("CREATE INDEX idx_students_birthday ON students(birthday)") 
-        
-        self.db.commit()
+        try:
+            
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS students (
+                    birthday DATE NOT NULL,
+                    id INT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    room INTEGER,
+                    sex char(1) NOT NULL,
+                    FOREIGN KEY (room) REFERENCES rooms(id)
+                )
+            """)
+            
+            cursor.execute("CREATE INDEX idx_students_room_sex ON students(room, sex)")
+            cursor.execute("CREATE INDEX idx_students_birthday ON students(birthday)") 
+            
+            self.db.commit()
+        finally:
+            cursor.close()

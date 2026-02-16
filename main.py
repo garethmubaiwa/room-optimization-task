@@ -44,29 +44,23 @@ def main():
 
         queries = Queries(db)
 
-        description, rows = queries.student_count_per_room()
-        exporter = Exporter(description, rows, selected_strategy)
-        exporter.export(f'student_count.{args.format}')
-        print(f"Exported to file student_count.{args.format} successfully.")
+        # Helper function to avoid repeating the export code 4 times
+        def run_and_export(query_method, filename_base):
+            description, rows = query_method()
+            exporter = Exporter(description, rows, selected_strategy)
+            exporter.export(f'{filename_base}.{args.format}')
+            print(f"Exported to {filename_base}.{args.format} successfully.")
 
-        description, rows = queries.smallest_avg_age()
-        exporter = Exporter(description, rows, selected_strategy)
-        exporter.export(f'smallest_avg_age.{args.format}')
-        print(f"Exported to file smallest_avg_age.{args.format} successfully.")
-
-        description, rows = queries.largest_age_diff()
-        exporter = Exporter(description, rows, selected_strategy)
-        exporter.export(f'largest_age_diff.{args.format}')
-        print(f"Exported to file largest_age_diff.{args.format} successfully.")
-
-        description, rows = queries.mixed_sex_rooms()  
-        exporter = Exporter(description, rows, selected_strategy)
-        exporter.export(f'mixed_sex_rooms.{args.format}')
-        print(f"Exported to file mixed_sex_rooms.{args.format} successfully.")
+        run_and_export(queries.student_count_per_room, 'student_count')
+        run_and_export(queries.smallest_avg_age, 'smallest_avg_age')
+        run_and_export(queries.largest_age_diff, 'largest_age_diff')
+        run_and_export(queries.mixed_sex_rooms, 'mixed_sex_rooms')
 
     except Exception as e:
         db.rollback()
         print(f"An error occurred: {e}")
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     main()
