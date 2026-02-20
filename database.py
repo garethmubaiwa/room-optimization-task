@@ -19,9 +19,16 @@ class Database:
             password=password
         )
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            self.rollback()
+        self.close()
 
     def get_cursor(self):
-        return self.connection.cursor()
+        return self.connection.cursor(dictionary=True)
     
     def commit(self):
         self.connection.commit()
@@ -31,3 +38,5 @@ class Database:
 
     def close(self):
         self.connection.close()
+
+    

@@ -11,36 +11,32 @@ class Importer:
         self.db = db
 
     def import_rooms(self, path):
-        
-        cursor = self.db.get_cursor()
-        with open(path, 'r') as f :
-            rooms = json.load(f)
-            values = [(room['id'], room['name']) for room in rooms]
-            try:
-                cursor.executemany("""
-                    INSERT IGNORE INTO rooms (id, name) VALUES (%s, %s)
-                """, values
-                )
-                self.db.commit()
-            except Exception as e:
-                self.db.rollback()
-                print(f"Error importing rooms: {e}")
+        with self.db.get_cursor() as cursor:
+            with open(path, 'r') as f:
+                rooms = json.load(f)
+                values = [(room['id'], room['name']) for room in rooms]
+                try:
+                    cursor.executemany("""
+                        INSERT IGNORE INTO rooms (id, name) VALUES (%s, %s)
+                    """, values
+                    )
+                    self.db.commit()
+                except Exception as e:
+                    self.db.rollback()
+                    print(f"Error importing rooms: {e}")
 
     def import_students(self, path):
-
-        cursor = self.db.get_cursor()
-        with open(path, 'r') as f :
-            students = json.load(f)
-
-            values = [(student['birthday'], student['id'], student['name'], student['room'], student['sex']) for student in students]
-            try:
-                cursor.executemany("""
-                    INSERT IGNORE INTO students (birthday, id, name, room, sex) VALUES (%s, %s, %s, %s, %s)
-                """, values
-                )
-                self.db.commit()
-            
-            # Handle exceptions and rollback in case of errors
-            except Exception as e:
-                self.db.rollback()
-                print(f"Error importing students: {e}")
+        with self.db.get_cursor() as cursor:
+            with open(path, 'r') as f :
+                students = json.load(f)
+                values = [(student['birthday'], student['id'], student['name'], student['room'], student['sex']) for student in students]
+                try:
+                    cursor.executemany("""
+                        INSERT IGNORE INTO students (birthday, id, name, room, sex) VALUES (%s, %s, %s, %s, %s)
+                    """, values
+                    )
+                    self.db.commit() 
+                # Handle exceptions and rollback in case of errors
+                except Exception as e:
+                    self.db.rollback()
+                    print(f"Error importing students: {e}")
