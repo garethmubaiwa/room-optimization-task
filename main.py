@@ -12,9 +12,10 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
+print(f"Connecting as user: {os.getenv('user')}")
+print(f"DEBUG: Host is '{os.getenv('host')}'")
 def main():
-
+    print("Step 1: Parsing arguments...") # DEBUG
     # Set up command-line argument parsing
     parser = argparse.ArgumentParser(description='Students and rooms management system')
     parser.add_argument('--students', required=True, help='Path to JSON file with students data')
@@ -27,43 +28,47 @@ def main():
         'xml': XMLFormat()
     }
     selected_strategy = format_strategies[args.format]
+    print(f"Step 2: Connecting to DB at {os.getenv('host')}...") # DEBUG
 
     # Initialize database connection
-    db = Database(
+    with Database(
         host=os.getenv('host'),
         user=os.getenv('user'),
         password=os.getenv('password'),
         database=os.getenv('database')
-    )
+    ) as db:
+        print("Step 3: Connected! Creating tables...") # DEBUG
+        # Create tables and import data
+        try:
+            Rooms(db).create_table()
+            Students(db).create_table()
 
-    # Create tables and import data
-    try:
-        Rooms(db).create_table()
-        Students(db).create_table()
+            print("Step 4: Importing data...") # DEBUG
+            importer = Importer(db)
+            importer.import_rooms(args.rooms)
+            importer.import_students(args.students)
 
-        importer = Importer(db)
-        importer.import_rooms(args.rooms)
-        importer.import_students(args.students)
+            queries = Queries(db)
 
-        queries = Queries(db)
+            def run_and_export(query_method, filename_base):
+                # Helper function to avoid repeating the export code 4 times
+                # Run the query and export results
+                description, rows = query_method()
+                exporter = Exporter(description, rows, selected_strategy)
+                exporter.export(f'{filename_base}.{args.format}')
+                print(f"Exported to {filename_base}.{args.format} successfully.")
 
-        # Helper function to avoid repeating the export code 4 times
-        def run_and_export(query_method, filename_base):
-            description, rows = query_method()
-            exporter = Exporter(description, rows, selected_strategy)
-            exporter.export(f'{filename_base}.{args.format}')
-            print(f"Exported to {filename_base}.{args.format} successfully.")
+          #  print("Step 5: Running queries...") # DEBUG
+            run_and_export(queries.student_count_per_room, 'student_count')
+            run_and_export(queries.smallest_avg_age, 'smallest_avg_age')
+            run_and_export(queries.largest_age_diff, 'largest_age_diff')
+            run_and_export(queries.mixed_sex_rooms, 'mixed_sex_rooms')
 
-        run_and_export(queries.student_count_per_room, 'student_count')
-        run_and_export(queries.smallest_avg_age, 'smallest_avg_age')
-        run_and_export(queries.largest_age_diff, 'largest_age_diff')
-        run_and_export(queries.mixed_sex_rooms, 'mixed_sex_rooms')
-
-    except Exception as e:
-        db.rollback()
-        print(f"An error occurred: {e}")
-    finally:
-        db.close()
+        except Exception as e:
+            db.rollback()
+            print(f"An error occurred: {e}")
+        finally:
+            db.close()
 
 if __name__ == "__main__":
     main()

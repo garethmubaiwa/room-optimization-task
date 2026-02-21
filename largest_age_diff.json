@@ -1,27 +1,27 @@
 [
   {
-    "id": 712,
-    "name": "Room #712",
-    "age_diff": 116
+    "id": "id",
+    "name": "name",
+    "age_diff": "age_diff"
   },
   {
-    "id": 213,
-    "name": "Room #213",
-    "age_diff": 115
+    "id": "id",
+    "name": "name",
+    "age_diff": "age_diff"
   },
   {
-    "id": 381,
-    "name": "Room #381",
-    "age_diff": 115
+    "id": "id",
+    "name": "name",
+    "age_diff": "age_diff"
   },
   {
-    "id": 83,
-    "name": "Room #83",
-    "age_diff": 115
+    "id": "id",
+    "name": "name",
+    "age_diff": "age_diff"
   },
   {
-    "id": 486,
-    "name": "Room #486",
-    "age_diff": 115
+    "id": "id",
+    "name": "name",
+    "age_diff": "age_diff"
   }
 ]

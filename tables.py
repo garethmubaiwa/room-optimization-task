@@ -12,12 +12,8 @@ class Rooms:
     def create_table(self):
         cursor = self.db.get_cursor()
         try:
-            # Drop child tables first to avoid Foreign Key constraint errors, then the parent.
-            cursor.execute("DROP TABLE IF EXISTS students")
-            cursor.execute("DROP TABLE IF EXISTS rooms")
-            
             cursor.execute("""
-                CREATE TABLE rooms (
+                CREATE TABLE IF NOT EXISTS rooms (
                     id INT PRIMARY KEY,
                     name VARCHAR(255) NOT NULL
                 )
@@ -33,7 +29,7 @@ class Students:
     def create_table(self):
         cursor = self.db.get_cursor()
         try:
-            
+            cursor.execute("DROP TABLE IF EXISTS students") # DEBUG: Drop the students table if it exists to ensure a clean slate for testing and avoid indexing issues.
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS students (
                     birthday DATE NOT NULL,
